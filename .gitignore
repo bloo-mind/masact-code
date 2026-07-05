@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+wheels/
+
+# Environments
+.venv/
+.env
+.envrc.local
+
+# uv
+# (uv.lock IS committed once the project has dependencies)
+
+# Tooling / editors
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# Local runtime output (agent journals, traces, scratch)
+*.jsonl
+scratch/
+runs/
