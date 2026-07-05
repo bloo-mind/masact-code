@@ -11,61 +11,95 @@ of large language models — taking the classical theory seriously, taking moder
 practice seriously, and insisting on connecting the two at every step. This
 repository is where that connection is made runnable.
 
-> **Status: early scaffolding.** The book is being written in public, and this
-> repository is filling in alongside it. The layout below is the destination;
-> expect directories to appear as the corresponding chapters settle. The
-> load-bearing listings already live *in the book itself* — this repository
-> carries the full modules and the larger programmes around them.
+The **foundations layer is complete and tested**; the systems and frontier
+layers are filling in behind it. The load-bearing listings printed in the book
+are faithful excerpts of the modules here — a line you copy from the page is a
+line that runs.
+
+## Quick start
+
+The toolchain is the book's own: a recent Python and
+[uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone https://github.com/bloo-mind/masact-code.git
+cd masact-code
+uv sync
+uv run pytest            # 138 tests, standard library only
+```
+
+Watch the book's running example — the software-engineering team —
+resolve a toy task end to end:
+
+```bash
+uv run python -m foundations.demo_team
+# outcome: shipped | suite: green
+```
+
+Every model in that demo is a `FakeClient` replaying a script, so it is
+deterministic and spends no tokens. Swap in a real `ModelClient` that calls a
+provider, and the same harness drives a live team.
+
+## Layout
+
+Three layers, mirroring the book. The foundations layer runs on the Python
+standard library alone; the upper layers need a framework and provider keys and
+are built later (see [Appendix C](https://books.bloo-mind.ai/masact/) and each
+layer's own README).
+
+### `foundations/` — the runtime and the classics
+
+The from-scratch runtime of **Chapter 20**, module for module:
+
+| Module | Role |
+|:-------|:-----|
+| `model.py` | the model client behind one interface, plus a `FakeClient` for tests |
+| `tools.py` | tools as data; the dispatcher that runs them, errors as observations |
+| `context.py` | context assembly — what the model sees, each turn |
+| `journal.py` | the append-only event journal; state is a `fold` of it |
+| `messages.py` | typed, performative messages (speech acts as an enum) |
+| `mailbox.py` | per-agent delivery |
+| `budget.py` | the token treasury |
+| `agent.py` | the observe–reason–act loop, with three ways to stop |
+| `team.py` | the coordinating harness — the merge gate and `run_team` |
+| `demo_team.py` | first flight: the whole team on a toy task |
+
+`foundations/algorithms/` — the classical algorithms named across the book,
+each with the exact function the book prints plus tests and extensions:
+
+`scaling` (Ch 1, Amdahl for agents) · `tool_schema` (Ch 6) ·
+`retrieval` (Ch 7) · `contract_net` (Ch 10) · `lamport`, `dcop` (Ch 11) ·
+`games` (Ch 12 / App A) · `jury` (Ch 13) · `argumentation` (Ch 14, Dung) ·
+`auctions` (Ch 15, Vickrey + Gode–Sunder) · `shapley` (Ch 16) ·
+`dependability` (Ch 23) · `evaluation` (Ch 24) · `calibration` (Ch 26).
+
+`foundations/emergence/` — the Part V simulations, seeded for reproducibility:
+`schelling`, `naming_game`, `cascade` (Ch 18).
+
+### `systems/` — the framework layer
+
+Larger LangGraph builds: the hardened coding-agent team and the evaluation
+harness of Chapters 23–24. Needs a framework and a provider key. See
+[`systems/README.md`](systems/README.md).
+
+### `frontier/` — the moving-target layer
+
+Versioned, dated laboratories on live vendor platforms: the framework
+comparison (Ch 19), interoperability (Ch 21–22), and the capstone scaling lab
+(Ch 27). See [`frontier/README.md`](frontier/README.md).
 
 ## How the book and the code fit together
 
 Not every line belongs in print. The book embeds the small, self-contained
-listings that make a concept more straightforward to implement — a Lamport
-clock, the jury-theorem sum, an exact Shapley value, the core of the from-scratch
-runtime. Everything larger — the full modules, the LLM-agent harnesses, the
-experiments, the labs — lives here, referenced from the text but not shown in
-it. **Appendix C** of the book is the setup guide; this README is its front door.
+listings that make a concept more straightforward to implement; everything
+larger — the LLM-agent harnesses, the experiments, the labs — lives here. The
+Chapter 20 runtime excerpts are verbatim slices of the `foundations/` modules;
+the standalone listings (the jury sum, exact Shapley, the grounded extension,
+the retry-and-gate cores, …) are the exact functions those modules export,
+surrounded here by tests and the extensions the chapters leave as exercises.
 
-Throughout, one project runs as the book's spine: an autonomous
-**software-engineering team** — an orchestrator that decomposes a task, one or
-more coder agents, a reviewer, and a tester, working over a real repository
-under a bounded budget of tokens and time. It is cooperative in its mission and
-competitive in its use of scarce compute, which is why it spans both halves of
-the field.
-
-## Layout
-
-The repository is organised in three layers, mirroring the book.
-
-| Layer | What it holds | Dependencies |
-|:------|:--------------|:-------------|
-| `foundations/` | Small, transparent implementations of the algorithms and mechanisms discussed in the book — kept dependency-light so you can see what the code is doing and what it is assuming. The from-scratch runtime built in Chapter 20 lives here. | Standard library, mostly |
-| `systems/` | Larger projects built with a modern orchestration framework — principally [LangGraph](https://langchain-ai.github.io/langgraph/) — demonstrating typed state, persistence, streaming, human approval, tracing, evaluation, and deployment. Substantial enough to fail in educationally useful ways. | A framework, model APIs |
-| `frontier/` | Versioned online laboratories involving current commercial and open-source agent platforms, including coding-agent teams. Maintained separately because these platforms rename their APIs at leisure. | Vendor SDKs, live keys |
-
-The dividing line is deliberate: the `foundations/` layer is meant to outlast
-every framework and vendor in the book, so it depends on as little as possible;
-the `frontier/` layer carries the burden of currency, so that a reader meeting
-the fifth renamed version of an API is not thereby obliged to purchase a new
-theory of cooperation.
-
-## Requirements
-
-- **Python 3.12+**
-- [**uv**](https://docs.astral.sh/uv/) for environment and dependency management,
-  matching the book's toolchain.
-- For the `systems/` and `frontier/` layers, API keys for one or more model
-  providers. The `foundations/` layer needs none.
-
-Once the package layout lands, getting started will be the usual two lines:
-
-```bash
-git clone https://github.com/bloo-mind/masact-code.git
-cd masact-code && uv sync
-```
-
-Exact run instructions per layer will accompany the code as it arrives; see
-Appendix C of the book for the current setup guide.
+Requirements: **Python 3.12+**, **uv**. The `foundations/` layer needs no keys;
+the upper layers read provider keys from `.env` (copy `.env.example`).
 
 ## Contributing
 
@@ -75,14 +109,12 @@ extends to the code. Issues and pull requests are gratefully received.
 
 ## Citing
 
-If this book or its code is useful in your work, please cite:
-
 ```bibtex
 @book{zhang2026masact,
   title     = {Multi-Agent Systems: A Contemporary Treatment},
   author    = {Zhang, Dell and Chang, Benjamin},
   year      = {2026},
-  url       = {https://books.bloo-mind.ai/masact/}
+  url        = {https://books.bloo-mind.ai/masact/}
 }
 ```
 

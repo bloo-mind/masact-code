@@ -1,0 +1,47 @@
+[project]
+name = "masact-code"
+version = "0.1.0"
+description = "Companion code for the textbook Multi-Agent Systems: A Contemporary Treatment (Zhang & Chang)"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Dell Zhang" },
+    { name = "Benjamin Chang" },
+]
+keywords = ["multi-agent-systems", "llm-agents", "agents", "textbook"]
+# The foundations layer runs on the standard library alone.
+dependencies = []
+
+[project.urls]
+Book = "https://books.bloo-mind.ai/masact/"
+Repository = "https://github.com/bloo-mind/masact-code"
+
+[project.optional-dependencies]
+# The systems layer (Ch 23-24 builds) needs an orchestration framework and a
+# model provider. Installed on demand; not required for `foundations/`.
+systems = [
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["foundations"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 78
+target-version = "py312"
