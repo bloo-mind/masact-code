@@ -30,7 +30,7 @@ Every package is built around a model *seam* (`Agent = Model + Harness`, Chapter
   human gate, budgets, retries, the paired statistics) is exercised hermetically
   in the test suite;
 - a **live** one (`LLMBrain`, `LLMJudge`) — a real chat model via
-  `langchain-openai`, charging real token usage to the budget.
+  `langchain-anthropic` (Claude), charging real token usage to the budget.
 
 The graph and the harness are identical either way; only the seam changes. This
 is why the whole layer is unit-tested without a key, and why a key is needed only
@@ -67,5 +67,6 @@ uv run python -m systems.coding_team.run --live
 uv run python -m systems.evaluation.run --live
 ```
 
-`MASACT_MODEL` selects the chat model (default `gpt-4o-mini`); point `LLMBrain`
+`MASACT_MODEL` selects the chat model (default `claude-opus-4-8`); set it to a
+cheaper tier — e.g. `claude-haiku-4-5` — for low-cost runs, or point `LLMBrain`
 at any LangChain chat model to change provider.

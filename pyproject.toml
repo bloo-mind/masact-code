@@ -23,8 +23,8 @@ Repository = "https://github.com/bloo-mind/masact-code"
 systems = [
     "langgraph>=0.2",
     "langchain-core>=0.3",
-    "langchain-openai>=0.2",   # the live model path (swap for any provider)
-    "python-dotenv>=1.0",      # load OPENAI_API_KEY from a git-ignored .env
+    "langchain-anthropic>=0.3",  # the live model path (swap for any provider)
+    "python-dotenv>=1.0",        # load ANTHROPIC_API_KEY from a git-ignored .env
 ]
 
 [dependency-groups]

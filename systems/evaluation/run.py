@@ -4,7 +4,7 @@
     uv run python -m systems.evaluation.run --live    # real model + LLM judge
 
 ``--live`` loads a git-ignored ``.env`` (copy ``.env.example``) for
-``OPENAI_API_KEY`` and uses ``MASACT_MODEL`` (default ``gpt-4o-mini``).
+``ANTHROPIC_API_KEY`` and uses ``MASACT_MODEL`` (default ``claude-opus-4-8``).
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> None:
         from dotenv import load_dotenv
 
         from systems.coding_team import LLMBrain
-        load_dotenv()                        # OPENAI_API_KEY from .env
+        load_dotenv()                        # ANTHROPIC_API_KEY from .env
         brain: object = LLMBrain()
         judge: object = LLMJudge()
         print("running the triple experiment on a live model...")

@@ -4,7 +4,7 @@
     uv run python -m systems.coding_team.run --live      # real model
 
 ``--live`` loads a git-ignored ``.env`` (copy ``.env.example``) for
-``OPENAI_API_KEY`` and uses ``MASACT_MODEL`` (default ``gpt-4o-mini``).
+``ANTHROPIC_API_KEY`` and uses ``MASACT_MODEL`` (default ``claude-opus-4-8``).
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> None:
 
     if live:
         from dotenv import load_dotenv
-        load_dotenv()                        # OPENAI_API_KEY from .env
+        load_dotenv()                        # ANTHROPIC_API_KEY from .env
         brain = LLMBrain()
         print("running the team on a live model...")
     else:

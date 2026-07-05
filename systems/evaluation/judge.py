@@ -32,9 +32,9 @@ class LLMJudge:
 
     def __init__(self, model: object | None = None):
         if model is None:
-            from langchain_openai import ChatOpenAI
-            name = os.environ.get("MASACT_MODEL", "gpt-4o-mini")
-            model = ChatOpenAI(model=name, temperature=0)
+            from langchain_anthropic import ChatAnthropic
+            name = os.environ.get("MASACT_MODEL", "claude-opus-4-8")
+            model = ChatAnthropic(model=name)   # no temperature: see LLMBrain
         self.model = model
 
     def __call__(self, task: str, output: str) -> float:
