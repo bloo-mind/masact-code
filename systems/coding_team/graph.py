@@ -1,11 +1,12 @@
 """The hardened coding team as a LangGraph state graph (Chapter 23).
 
 The plain-Python version of every mechanism here lives in ``foundations/`` ---
-the loop, the journal, the ACCEPT gate, the retry-and-idempotency wrapper. This
-is the same machinery realised in the framework the book teaches: typed state
-with reducers, a checkpointer for persistence and time-travel, a human-in-the-
-loop interrupt at the merge, per-node retries, and a shared budget. The graph is
-model-independent; it takes a :class:`~systems.coding_team.brains.Brain`.
+the loop, the journal, the ACCEPT gate, the retry-and-idempotency wrapper.
+This is the same machinery realised in the framework the book teaches: typed
+state with reducers, a checkpointer for persistence and time-travel, a
+human-in-the-loop interrupt at the merge, per-node retries, and a shared
+budget. The graph is model-independent; it takes a
+:class:`~systems.coding_team.brains.Brain`.
 """
 
 from __future__ import annotations
@@ -40,7 +41,8 @@ def build_team(brain: Brain, *, checkpointer: object | None = None):
                 "findings": [f"reviewer: {d['reason']} ({d['verdict']})"]}
 
     def gate(state: TeamState) -> dict:
-        # Human-in-the-loop: the run pauses here until an approval is supplied.
+        # Human-in-the-loop: the run pauses here until an approval
+        # is supplied.
         approved = interrupt({"action": "merge", "diff": state["diff"]})
         return {"approved": bool(approved),
                 "status": "test" if approved else "rejected"}
@@ -74,7 +76,8 @@ def build_team(brain: Brain, *, checkpointer: object | None = None):
 
 def run_team(app: object, task: str, thread_id: str = "team",
              approve: bool = True) -> TeamState:
-    """Drive the graph to completion, answering the human gate with ``approve``.
+    """Drive the graph to completion, answering the human gate with
+    ``approve``.
 
     A real deployment parks at the interrupt and resumes when a person clicks;
     here we supply the decision directly so the run is non-interactive.

@@ -47,3 +47,8 @@ addopts = "-q"
 [tool.ruff]
 line-length = 78
 target-version = "py312"
+
+[tool.ruff.lint]
+# The book's code charter caps lines at 78 columns; enforce it (E501) on top
+# of ruff's default pyflakes/pycodestyle checks so the limit cannot drift.
+extend-select = ["E501"]

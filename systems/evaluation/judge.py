@@ -1,9 +1,10 @@
 """LLM-as-judge and its calibration (Chapter 24).
 
-A judge is a callable ``(task, output) -> quality in [0, 1]``. The scripted judge
-is deterministic (for tests); the LLM judge rubric-scores with a real model. A
-judge is an instrument, so it is calibrated against human labels --- and the
-``agreement`` helper reports how often it and the humans reach the same verdict.
+A judge is a callable ``(task, output) -> quality in [0, 1]``. The scripted
+judge is deterministic (for tests); the LLM judge rubric-scores with a real
+model. A judge is an instrument, so it is calibrated against human labels ---
+and the ``agreement`` helper reports how often it and the humans reach the
+same verdict.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ class ScriptedJudge:
     """Deterministic quality --- a lookup or a rule; no model."""
 
     def __init__(self, quality: object):
-        self.quality = quality          # dict[(task, output) -> q] or callable
+        self.quality = quality  # dict[(task, output) -> q] or callable
 
     def __call__(self, task: str, output: str) -> float:
         if callable(self.quality):
@@ -26,7 +27,8 @@ class ScriptedJudge:
 
 
 class LLMJudge:
-    """Rubric scoring from a real chat model (0 = useless, 1 = resolves it)."""
+    """Rubric scoring from a real chat model
+    (0 = useless, 1 = resolves it)."""
 
     def __init__(self, model: object | None = None):
         if model is None:

@@ -48,9 +48,16 @@ Hermetic — no key required:
 
 ```bash
 uv run python -m systems.coding_team.run        # the team ships a change
+uv run python -m systems.coding_team.chaos_day  # inject the six failures
 uv run python -m systems.evaluation.run         # the triple experiment
 uv run pytest tests/test_systems_coding_team.py tests/test_systems_evaluation.py
 ```
+
+`chaos_day` is the Chapter 23 finale: it injects the chapter's six failures —
+a crash, a hang, a duplicate delivery, a runaway bill, a mid-run deploy, and a
+human breaking in — against the assembled team and confirms each is *boring*.
+Six injections, six one-line log entries, none paging a human before nine; a
+surprise would be a defect, so it doubles as a test.
 
 Live — needs a key (see **Appendix C** and `.env.example`; put the key in a
 git-ignored `.env`, never in a command line or in the repo):

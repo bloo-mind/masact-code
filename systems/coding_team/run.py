@@ -26,7 +26,8 @@ def main(argv: list[str] | None = None) -> None:
         print("running the team on a live model...")
     else:
         brain = ScriptedBrain()
-        print("running the team on a scripted brain (no key, deterministic)...")
+        print(
+            "running the team on a scripted brain (no key, deterministic)...")
 
     app = build_team(brain)
     final = run_team(app, "Make the failing parser test pass.")

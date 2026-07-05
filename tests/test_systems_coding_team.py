@@ -1,7 +1,7 @@
 """Hermetic tests for the Chapter 23 LangGraph team.
 
-Everything here runs on a ScriptedBrain --- no model, no key, no network --- so
-what is under test is the framework machinery: reducers, checkpointing, the
+Everything here runs on a ScriptedBrain --- no model, no key, no network ---
+so what is under test is the framework machinery: reducers, checkpointing, the
 human-gate interrupt, budget accumulation, retries, and time-travel.
 """
 

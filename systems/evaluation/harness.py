@@ -1,10 +1,11 @@
-"""The triple experiment (Chapter 24): team vs strong single agent vs workflow.
+"""The triple experiment (Chapter 24): team vs strong single agent vs
+workflow.
 
 The honest question is never "is the team good?" but "is it better than the
 strongest thing I would otherwise build, and at what cost?" This harness runs
 several systems on the *same* tasks, judges each output, and reports the
-paired comparison --- reusing the tested ``paired_t`` from the foundations layer,
-so the statistics are the same in the lab as on the page.
+paired comparison --- reusing the tested ``paired_t`` from the foundations
+layer, so the statistics are the same in the lab as on the page.
 """
 
 from __future__ import annotations

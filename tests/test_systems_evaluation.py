@@ -1,7 +1,7 @@
 """Hermetic tests for the Chapter 24 evaluation harness.
 
-The statistics (``run_suite``, ``compare``, ``agreement``) need no model and no
-framework, so they run in the core suite. The triple-experiment integration
+The statistics (``run_suite``, ``compare``, ``agreement``) need no model and
+no framework, so they run in the core suite. The triple-experiment integration
 drives the real LangGraph team through a scripted brain, so it skips when the
 systems extra is absent.
 """
@@ -47,7 +47,7 @@ def test_compare_skips_paired_for_more_than_two():
 
 def test_agreement_counts_matching_verdicts():
     judge = [0.9, 0.1, 0.8, 0.2]
-    human = [1.0, 0.0, 0.3, 0.4]      # third disagrees (judge pass, human fail)
+    human = [1.0, 0.0, 0.3, 0.4]  # third disagrees (judge pass, human fail)
     assert agreement(judge, human) == pytest.approx(0.75)
 
 
@@ -62,11 +62,14 @@ def test_triple_experiment_ranks_the_systems():
     )
     scores = {
         "team": run_suite(team_runner(ScriptedBrain()), tasks, judge),
-        "single": run_suite(single_agent_runner(ScriptedBrain()), tasks, judge),
+        "single": run_suite(
+            single_agent_runner(ScriptedBrain()), tasks, judge),
         "workflow": run_suite(workflow_runner(), tasks, judge),
     }
-    # the team ships a substantive diff on every task; the fixed pipeline does not
+    # the team ships a substantive diff on every task;
+    # the fixed pipeline does not
     assert scores["team"] == [1.0, 1.0, 1.0]
     assert scores["workflow"] == [0.4, 0.4, 0.4]
-    verdict = compare({"team": scores["team"], "workflow": scores["workflow"]})
+    verdict = compare(
+        {"team": scores["team"], "workflow": scores["workflow"]})
     assert verdict["means"]["team"] > verdict["means"]["workflow"]

@@ -2,8 +2,8 @@
 
 The dependability machinery of the graph --- reducers, checkpoints, the human
 gate, budgets, retries --- is entirely model-independent, so the graph takes a
-``Brain`` and the tests inject a deterministic one. Swap in ``LLMBrain`` and the
-same graph is driven by a real chat model. This is the ``Agent = Model +
+``Brain`` and the tests inject a deterministic one. Swap in ``LLMBrain`` and
+the same graph is driven by a real chat model. This is the ``Agent = Model +
 Harness`` split of Chapter 3, drawn at the seam between the two.
 """
 
@@ -80,7 +80,8 @@ class LLMBrain:
         from pydantic import BaseModel, Field
 
         class Change(BaseModel):
-            diff: str = Field(description="a minimal patch, unified-diff style")
+            diff: str = Field(
+                description="a minimal patch, unified-diff style")
             note: str = Field(description="one line on what changed and why")
 
         parsed, cost = self._ask(Change, _CODE_PROMPT.format(**state))
@@ -94,7 +95,9 @@ class LLMBrain:
             reason: str = Field(description="one line justifying the verdict")
 
         parsed, cost = self._ask(Verdict, _REVIEW_PROMPT.format(**state))
-        verdict = "accept" if parsed.verdict.lower().startswith("a") else "reject"
+        verdict = (
+            "accept" if parsed.verdict.lower().startswith("a") else "reject"
+        )
         return {"verdict": verdict, "reason": parsed.reason, "cost": cost}
 
     def test(self, state: TeamState) -> dict:
