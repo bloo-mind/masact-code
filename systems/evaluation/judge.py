@@ -33,7 +33,7 @@ class LLMJudge:
     def __init__(self, model: object | None = None):
         if model is None:
             from langchain_anthropic import ChatAnthropic
-            name = os.environ.get("MASACT_MODEL", "claude-opus-4-8")
+            name = os.environ.get("MASACT_MODEL", "claude-sonnet-5")
             model = ChatAnthropic(model=name)   # no temperature: see LLMBrain
         self.model = model
 

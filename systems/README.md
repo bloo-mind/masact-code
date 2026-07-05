@@ -67,6 +67,7 @@ uv run python -m systems.coding_team.run --live
 uv run python -m systems.evaluation.run --live
 ```
 
-`MASACT_MODEL` selects the chat model (default `claude-opus-4-8`); set it to a
-cheaper tier — e.g. `claude-haiku-4-5` — for low-cost runs, or point `LLMBrain`
-at any LangChain chat model to change provider.
+`MASACT_MODEL` selects the chat model (default `claude-sonnet-5` — cheaper than
+the flagship, strong enough to ship the demo); set it to `claude-haiku-4-5` for
+the cheapest runs, `claude-opus-4-8` for the strongest, or point `LLMBrain` at
+any LangChain chat model to change provider.

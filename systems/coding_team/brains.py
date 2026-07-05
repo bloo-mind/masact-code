@@ -56,18 +56,20 @@ class ScriptedBrain:
 class LLMBrain:
     """Live decisions from a chat model, via structured output.
 
-    Reads the model name from ``MASACT_MODEL`` (default the current Claude
-    Opus) and the key from the environment (``ANTHROPIC_API_KEY``); swap the
-    model for any LangChain chat model to change provider. Token usage is read
-    back from the response and charged to the treasury, so the budget is real.
+    Reads the model name from ``MASACT_MODEL`` (default a mid-tier Claude
+    model --- cheaper than the flagship, strong enough to ship the demo) and
+    the key from the environment (``ANTHROPIC_API_KEY``); swap the model for
+    any LangChain chat model to change provider. Token usage is read back from
+    the response and charged to the treasury, so the budget is real.
     """
 
     def __init__(self, model: object | None = None):
         if model is None:
             from langchain_anthropic import ChatAnthropic
-            name = os.environ.get("MASACT_MODEL", "claude-opus-4-8")
-            # No temperature: the current Opus/Sonnet models reject sampling
-            # parameters, and it never made sampling deterministic anyway.
+            name = os.environ.get("MASACT_MODEL", "claude-sonnet-5")
+            # No temperature: omitted so the same call is valid on every tier
+            # (the current Opus/Sonnet models reject sampling parameters), and
+            # it never made sampling deterministic anyway.
             model = ChatAnthropic(model=name)
         self.model = model
 

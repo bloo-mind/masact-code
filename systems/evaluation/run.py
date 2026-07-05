@@ -4,7 +4,7 @@
     uv run python -m systems.evaluation.run --live    # real model + LLM judge
 
 ``--live`` loads a git-ignored ``.env`` (copy ``.env.example``) for
-``ANTHROPIC_API_KEY`` and uses ``MASACT_MODEL`` (default ``claude-opus-4-8``).
+``ANTHROPIC_API_KEY`` and uses ``MASACT_MODEL`` (default ``claude-sonnet-5``).
 """
 
 from __future__ import annotations
@@ -16,10 +16,15 @@ from .harness import (
 )
 from .judge import LLMJudge, ScriptedJudge
 
+# Self-contained tasks (the bug and its failing test on the page) so a capable
+# model produces a verifiable fix rather than guessing at hidden code.
 _TASKS = [
-    "make the failing parser test pass",
-    "guard the list index against an empty input",
-    "handle the empty-collection edge case",
+    "Fix `def head(xs): return xs[0]` to return None on an empty list, so "
+    "that `head([]) is None` holds.",
+    "Fix `def last(xs): return xs[-1]` to return None on an empty list, so "
+    "that `last([]) is None` holds.",
+    "Fix `def lone(xs): return xs[0]` to raise ValueError unless the list "
+    "has exactly one element, so `lone([1, 2])` raises.",
 ]
 
 
