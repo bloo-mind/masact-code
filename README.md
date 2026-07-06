@@ -11,10 +11,13 @@ of large language models — taking the classical theory seriously, taking moder
 practice seriously, and insisting on connecting the two at every step. This
 repository is where that connection is made runnable.
 
-The **foundations layer is complete and tested**; the systems and frontier
-layers are filling in behind it. The load-bearing listings printed in the book
-are faithful excerpts of the modules here — a line you copy from the page is a
-line that runs.
+All three layers are **built and tested** — the foundations runtime, the systems
+builds (Chapters 23–24), and the frontier labs (Chapters 19/21/22/27) — with a
+hermetic test suite that needs no key or network. The frontier labs alone are
+**dated by design**: they plug into vendor SDKs that rename their APIs at
+leisure, so they record the versions they were last run against and are expected
+to need updating. The load-bearing listings printed in the book are faithful
+excerpts of the modules here — a line you copy from the page is a line that runs.
 
 ## Quick start
 
