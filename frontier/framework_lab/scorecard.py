@@ -29,6 +29,7 @@ from ..rig import (
 # The point is the SPREAD, not the cells --- the cheapest declaration hides
 # the most defaulted-away decisions, which the failure column then bills.
 LOC: dict[str, int] = {
+    "crewai": 12,            # a declarative crew: role, goal, task declared
     "plain": 15,             # one agent, one pass (frontier.plain_runner)
     "claude_agent_sdk": 30,  # a vendor agent SDK adapter
     "langgraph": 90,         # the Chapter 23 graph (systems/coding_team)
@@ -106,6 +107,11 @@ DISPOSITIONS: dict[str, dict[Fault, str]] = {
         Fault.TOOL_ERROR: RETRY,
         Fault.TIMEOUT: RETRY,
         Fault.MALFORMED: SURFACE,
+    },
+    "crewai": {              # high abstraction tends to paper over faults
+        Fault.TOOL_ERROR: RETRY,
+        Fault.TIMEOUT: RETRY,
+        Fault.MALFORMED: SWALLOW,
     },
 }
 

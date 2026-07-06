@@ -21,7 +21,7 @@ same interface.
 | Lab | From | What it builds |
 |:----|:-----|:---------------|
 | [`scaling_lab/`](scaling_lab/) | Ch 27 | The **capstone**. Sweeps team size × topology; locates the empirical flat maximum and checks it against the Amdahl-with-coordination-tax theory (`foundations.scaling`) on the same grid; shows cost rising past the maximum and the failure census migrating competence → join as the population grows. Plus the diversity-ablation twin: a jury switching on as measured error-correlation falls. |
-| [`framework_lab/`](framework_lab/) | Ch 19 | One coding job scored across frameworks on the four columns, **same model underneath**. The lines-of-code column spreads dramatically and misleads; the **failure-behaviour** column — a real tool error / timeout / malformed response *injected and observed*, not looked up — is the separator that repays the exercise. |
+| [`framework_lab/`](framework_lab/) | Ch 19 | One coding job scored across the book's three design-space positions — a **graph runtime** (LangGraph), a **vendor agent SDK** (Claude Agent SDK), and a **declarative crew** (CrewAI) — plus the standing plain baseline, all on the **same model**. The lines-of-code column spreads dramatically and misleads (declaration wins it); the **failure-behaviour** column — a real tool error / timeout / malformed response *injected and observed*, not looked up — is the separator that repays the exercise. |
 | [`interop/`](interop/) | Ch 22 | The three altitudes. An **MCP** server wrapping a team tool, called over the protocol (in-memory for tests, stdio for real); an **A2A Agent Card** published at its well-known address, with the task lifecycle; and the supervisor-meets-supervisor deadlock — every message schema-valid while the joint system makes no progress: *schemas green, task dead*. |
 | [`patterns/`](patterns/) | Ch 21 | The pattern catalogue (nine patterns, three anti-patterns) and a **journal detector** for each characteristic failure — stale plan, placation, polish loop, chorus, whisper divergence, stampede, stale read — each firing on its injection and staying silent on a healthy run. The router's *misroute* is the honest exception: it is invisible in the journal (a healthy run of the wrong kind), so it is judged by an output oracle. Plus composition: a supervisor of reflection launders placation up the hierarchy; a router over a pipeline turns a wrong answer into a wrong process. |
 
@@ -50,9 +50,15 @@ uv run python -m frontier.scaling_lab.run --live     # a small real-team smoke
 - `langgraph` / `langchain-anthropic` — the graph runtime and model seam (shared
   with `systems/`, installed via the `systems` extra).
 - `claude-agent-sdk` **0.2.110** — the vendor-agent-SDK position. It drives the
-  `claude` CLI as its runtime, so it needs that binary on `PATH`; it is the
-  flakiest position by design, and the framework scorecard is written to record
-  a crashing framework as a failure-behaviour data point rather than fall over.
+  `claude` CLI as its runtime, so it needs that binary on `PATH`; the adapter
+  runs it with no tools and `setting_sources=[]` so the spawned CLI ignores the
+  host's own settings, hooks, and plugins (whose events otherwise flood the turn
+  budget). It is the slowest position by a wide margin — CLI-spawn overhead — and
+  the framework scorecard records a crashing framework as a failure-behaviour
+  data point rather than falling over.
+- `crewai` **1.15.1** — the declarative-crew position. Heavy (pulls litellm and
+  friends), and runs the shared Claude model through litellm's `anthropic/<model>`
+  for same-model control. Telemetry is opted out in the runner.
 - The **A2A Agent Card** is built to the published JSON spec directly (a
   dataclass → `/.well-known/agent-card.json`) rather than via `a2a-sdk`, whose
   1.x line is protobuf-shaped.

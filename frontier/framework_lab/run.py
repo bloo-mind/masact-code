@@ -15,11 +15,14 @@ table --- the column that repays the exercise.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import shutil
 
 from ..rig import Runner
-from ..runners import claude_agent_runner, langgraph_runner, plain_runner
+from ..runners import (
+    claude_agent_runner, crew_runner, langgraph_runner, plain_runner,
+)
 from ..tasks import coupled_task
 from .scorecard import Fault, failure_behaviour_table, scorecard
 
@@ -41,11 +44,13 @@ def _build_runners(live: bool) -> dict[str, Runner]:
         "langgraph": langgraph_runner(brain),
         "plain": plain_runner(brain),
     }
+    # Same-model control: every position runs the SHARED model, not its own
+    # default, or its scorecard row measures the model.
+    model = os.environ.get("MASACT_MODEL", "claude-sonnet-5")
     if shutil.which("claude"):
-        # Same-model control: the vendor SDK must run the SHARED model, not
-        # its own hardcoded default, or its scorecard row measures the model.
-        model = os.environ.get("MASACT_MODEL", "claude-sonnet-5")
         runners["claude_agent_sdk"] = claude_agent_runner(model=model)
+    if importlib.util.find_spec("crewai") is not None:
+        runners["crewai"] = crew_runner(model=model)
     return runners
 
 

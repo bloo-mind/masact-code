@@ -4,7 +4,8 @@ The instruments (scorecards, sweeps, censuses) are model-independent; the
 runners are the dated seam where a real framework or vendor SDK plugs in. A
 scripted runner makes the whole layer testable with no key and no network;
 the live runners reuse the tested Chapter 23 team and a single-agent
-baseline, plus a dated Claude Agent SDK adapter.
+baseline, plus dated Claude Agent SDK and CrewAI adapters --- the graph
+runtime, the vendor agent SDK, and the declarative crew of Chapter 19.
 
 Same-model control (Chapter 19's insistence) is the caller's job: pass one
 ``brain`` / ``model`` to every runner being compared, or the comparison
@@ -126,12 +127,14 @@ def claude_agent_runner(model: str = "claude-sonnet-5",
             )
 
             async def _collect() -> tuple[str, int]:
-                # No tools: the task is a self-contained bug with no
-                # workspace, so the SDK should complete the diff as text
-                # rather than flail Read/Edit-ing files that do not exist.
+                # Two isolations make this a code-completer rather than a
+                # crash: no tools (the bug is self-contained --- no workspace
+                # to Read/Edit), and ``setting_sources=[]`` so the spawned
+                # ``claude`` CLI ignores the host's own settings, hooks, and
+                # plugins, whose events otherwise flood the turn budget.
                 opts = ClaudeAgentOptions(system_prompt=_AGENT_SYSTEM,
                                           model=model, allowed_tools=[],
-                                          max_turns=2)
+                                          setting_sources=[], max_turns=3)
                 out, tokens = "", 0
                 async for msg in query(prompt=task, options=opts):
                     if isinstance(msg, ResultMessage):
@@ -148,6 +151,49 @@ def claude_agent_runner(model: str = "claude-sonnet-5",
                  else _default_quality(out))
             r = RunResult(task=task, output=out,
                           status="shipped" if out else "failed", quality=q,
+                          tokens=tokens)
+            r.log(RUN_STARTED, task[:40])
+            r.log(AGENT_FINISHED, r.status)
+            return r
+        return run_timed(_go)
+    return run
+
+
+# --- CrewAI: a declarative crew (dated; a heavy vendor framework) ---------
+
+def crew_runner(model: str = "claude-sonnet-5",
+                judge: Judge | None = None) -> Runner:
+    """A declarative crew (CrewAI) as a runner --- Chapter 19's third
+    framework position. The agent and its task are *declared*; the framework
+    owns the loop. Dated and heavy; needs a provider key, and runs the shared
+    model through litellm's ``anthropic/<model>`` for same-model control. This
+    is where the lines-of-code column wins most dramatically --- and, the book
+    warns, most misleadingly, since the win measures the decisions you did not
+    get to make."""
+    def run(task: str) -> RunResult:
+        def _go() -> RunResult:
+            import os
+            os.environ.setdefault("CREWAI_TELEMETRY_OPT_OUT", "true")
+            os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
+            from crewai import LLM, Agent, Crew, Task
+
+            coder = Agent(
+                role="Coder",
+                goal="Fix the bug with the smallest possible patch",
+                backstory="You reply with a unified diff and nothing else.",
+                llm=LLM(model=f"anthropic/{model}"), verbose=False)
+            job = Task(description=task,
+                       expected_output="a minimal unified-diff patch",
+                       agent=coder)
+            out = Crew(agents=[coder], tasks=[job], verbose=False).kickoff()
+            text = str(out.raw or "")
+            usage = out.token_usage
+            tokens = int(getattr(usage, "total_tokens", 0) or 0)
+            q = (judge(task, text) if judge is not None
+                 else _default_quality(text))
+            r = RunResult(task=task, output=text,
+                          status="shipped" if text else "failed", quality=q,
                           tokens=tokens)
             r.log(RUN_STARTED, task[:40])
             r.log(AGENT_FINISHED, r.status)

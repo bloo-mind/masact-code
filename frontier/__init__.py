@@ -15,7 +15,8 @@ the numbers.
 
 from .rig import RunResult, Runner, four_columns, mean, run_timed
 from .runners import (
-    claude_agent_runner, langgraph_runner, plain_runner, scripted_runner,
+    claude_agent_runner, crew_runner, langgraph_runner, plain_runner,
+    scripted_runner,
 )
 from .tasks import (
     COUPLED_TASK, ISSUE_BATCH, Issue, coupled_task, parallel_task,
@@ -24,6 +25,7 @@ from .tasks import (
 __all__ = [
     "RunResult", "Runner", "four_columns", "mean", "run_timed",
     "scripted_runner", "langgraph_runner", "plain_runner",
-    "claude_agent_runner", "Issue", "ISSUE_BATCH", "COUPLED_TASK",
+    "claude_agent_runner", "crew_runner", "Issue", "ISSUE_BATCH",
+    "COUPLED_TASK",
     "parallel_task", "coupled_task",
 ]

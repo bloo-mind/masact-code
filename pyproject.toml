@@ -32,6 +32,7 @@ frontier = [
     "masact-code[systems]",
     "mcp>=1.0",              # the tool interface: an MCP server for a team tool
     "claude-agent-sdk>=0.2",  # a vendor agent SDK (dated: needs the `claude` CLI)
+    "crewai>=1.0",           # a declarative crew (dated; heavy; the Ch19 crew)
 ]
 
 [dependency-groups]

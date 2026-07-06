@@ -155,3 +155,12 @@ def test_untagged_live_position_falls_back_to_dated_disposition():
     table = failure_behaviour_table(
         {"plain": scripted_runner(tokens=200)}, [Fault.TOOL_ERROR])
     assert table["plain"]["TOOL_ERROR"] == "swallowed"
+
+
+def test_crew_position_is_registered():
+    """The declarative-crew position is wired in (live-only, so here we only
+    check registration, not a run --- CrewAI needs a provider key)."""
+    from frontier import crew_runner
+    from frontier.framework_lab.scorecard import DISPOSITIONS, LOC
+    assert callable(crew_runner)
+    assert "crewai" in LOC and "crewai" in DISPOSITIONS
