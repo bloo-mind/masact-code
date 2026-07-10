@@ -16,7 +16,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import RetryPolicy, interrupt
 
 from .brains import Brain
-from .state import TeamState, initial_state
+from .state import NO_CAP, TeamState, initial_state
 
 MAX_TURNS = 3
 
@@ -29,31 +29,53 @@ def build_team(brain: Brain, *, checkpointer: object | None = None):
     """Compile the team graph. The merge is gated by a human interrupt; drive
     it to completion with :func:`run_team`, which supplies the approval."""
 
+    def _wound_down(state: TeamState, role: str) -> dict | None:
+        # The treasury has a ceiling the nodes can see: a node that finds it
+        # spent refuses to spend more --- wind-down at the node boundary,
+        # not a bill discovered afterwards.
+        if state["spent"] >= state.get("allowance", NO_CAP):
+            return {"status": "halted-budget",
+                    "findings": [f"{role}: treasury exhausted; wound down"]}
+        return None
+
     def coder(state: TeamState) -> dict:
+        if (halt := _wound_down(state, "coder")) is not None:
+            return halt
         d = brain.code(state)
         return {"diff": d["diff"], "spent": d["cost"], "status": "review",
                 "turn": state["turn"] + 1,
                 "findings": [f"coder: {d['note']}"]}
 
     def reviewer(state: TeamState) -> dict:
+        if (halt := _wound_down(state, "reviewer")) is not None:
+            return halt
         d = brain.review(state)
-        return {"verdict": d["verdict"], "spent": d["cost"],
-                "findings": [f"reviewer: {d['reason']} ({d['verdict']})"]}
+        out: dict = {"verdict": d["verdict"], "spent": d["cost"],
+                     "findings": [f"reviewer: {d['reason']} "
+                                  f"({d['verdict']})"]}
+        if d["verdict"] != "accept" and state["turn"] >= MAX_TURNS:
+            out["status"] = "rejected"   # the cap is a terminal verdict,
+        return out                       # not an eternal "review"
 
     def gate(state: TeamState) -> dict:
-        # Human-in-the-loop: the run pauses here until an approval
-        # is supplied.
+        # Human-in-the-loop: the run pauses here until an approval is
+        # supplied. Only a literal True approves --- a truthy string
+        # ("false", say) must not wave a merge through.
         approved = interrupt({"action": "merge", "diff": state["diff"]})
-        return {"approved": bool(approved),
-                "status": "test" if approved else "rejected"}
+        ok = approved is True
+        return {"approved": ok, "status": "test" if ok else "rejected"}
 
     def tester(state: TeamState) -> dict:
+        if (halt := _wound_down(state, "tester")) is not None:
+            return halt
         d = brain.test(state)
         return {"suite": d["suite"], "spent": d["cost"],
                 "status": "shipped" if d["suite"] == "green" else "broken",
                 "findings": [f"tester: suite {d['suite']}"]}
 
     def after_review(state: TeamState) -> str:
+        if state["status"] == "halted-budget":
+            return END
         if state["verdict"] == "accept":
             return "gate"
         return "coder" if state["turn"] < MAX_TURNS else END

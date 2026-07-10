@@ -38,6 +38,14 @@ def test_error_is_returned_not_raised() -> None:
     assert result == {"error": "path must be string"}
 
 
+def test_unknown_field_returns_error_observation() -> None:
+    # An argument the schema never declared is malformed too --- an error
+    # dictionary, not a TypeError raised out of ``fn(**args)``.
+    args = {"path": "tests/test_auth.py", "verbose": True}
+    result = dispatch(run_tests_tool, run_tests, args)
+    assert result == {"error": "unknown field: verbose"}
+
+
 def test_types_map_covers_the_schema_primitives() -> None:
     assert types == {"string": str, "integer": int, "boolean": bool}
 

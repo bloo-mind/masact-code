@@ -17,8 +17,14 @@ def append(path: str, kind: str, **data) -> dict:
 
 
 def events(path: str) -> list[dict]:
+    out: list[dict] = []
     with open(path) as f:
-        return [json.loads(line) for line in f]
+        for line in f:
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:  # a torn final line: died mid-write
+                break
+    return out
 
 
 def fold(evts: list[dict]) -> dict:

@@ -24,6 +24,7 @@ systems = [
     "langgraph>=0.2",
     "langchain-core>=0.3",
     "langchain-anthropic>=0.3",  # the live model path (swap for any provider)
+    "pydantic>=2.0",             # structured output schemas (used directly)
     "python-dotenv>=1.0",        # load ANTHROPIC_API_KEY from a git-ignored .env
 ]
 # The frontier layer (Ch 19/21/22/27 labs) builds on the systems layer and adds

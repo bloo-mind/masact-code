@@ -14,6 +14,7 @@ tool name and arguments regardless of where the tool lives.
 from __future__ import annotations
 
 import asyncio
+import sys
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -47,7 +48,8 @@ def call_tool(name: str, args: dict) -> str:
 async def _call_over_stdio(name: str, args: dict) -> str:
     """Launch the server as a child process and call one tool."""
     params = StdioServerParameters(
-        command="python", args=["-m", "frontier.interop.mcp_server"])
+        command=sys.executable,   # this interpreter, not whatever `python`
+        args=["-m", "frontier.interop.mcp_server"])
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as client:
             await client.initialize()
@@ -55,6 +57,11 @@ async def _call_over_stdio(name: str, args: dict) -> str:
             return result.content[0].text
 
 
-def call_tool_stdio(name: str, args: dict) -> str:
-    """Sync wrapper for the real cross-process stdio path (best-effort)."""
-    return asyncio.run(_call_over_stdio(name, args))
+def call_tool_stdio(name: str, args: dict, timeout: float = 30.0) -> str:
+    """Sync wrapper for the real cross-process stdio path (best-effort).
+
+    Bounded: a child that never completes the handshake --- a missing
+    module, a wedged pipe --- surfaces as ``TimeoutError`` after
+    ``timeout`` seconds rather than hanging the caller."""
+    return asyncio.run(asyncio.wait_for(_call_over_stdio(name, args),
+                                        timeout))

@@ -42,11 +42,17 @@ def main(argv: list[str] | None = None) -> None:
             "running the team on a scripted brain (no key, deterministic)...")
 
     app = build_team(brain)
-    final = run_team(app, _TASK)
+    final = run_team(app, _TASK)   # the merge gate is auto-approved here
+    print("(the human merge gate is auto-approved so the demo is "
+          "non-interactive; a deployment parks there)")
     print(f"status: {final['status']} | suite: {final['suite']} "
           f"| spent: {final['spent']} tokens")
     for f in final["findings"]:
         print("  -", f)
+    if final["suite"]:
+        print("note: the tester's verdict is a model's reading of the diff, "
+              "not an executed suite --- Chapter 24 builds the executable "
+              "oracle.")
 
 
 if __name__ == "__main__":

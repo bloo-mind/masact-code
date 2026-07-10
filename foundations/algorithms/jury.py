@@ -9,6 +9,11 @@ the independence clause is relaxed.
 
 Standard library only. The arithmetic is exact (``math.comb``); nothing
 here is random, so there is nothing to seed.
+
+A convention worth knowing: the tail sum is the theorem's odd-``n`` form.
+At even ``n`` its lower limit counts the ``k = n/2`` split --- a tie --- as
+a success; keep juries odd (as the chapter does throughout), or break ties
+explicitly before trusting the even-``n`` number.
 """
 
 from math import comb, log

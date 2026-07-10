@@ -7,6 +7,18 @@ one-line entries in the morning log, none of them requiring a human before
 nine. A surprise here would be a defect in the machinery, so the script
 doubles as an executable assertion that the dependability mechanisms hold.
 
+Honesty about scope, before anything runs. What each scene *exercises* is
+real --- checkpoint resume after a mid-node death, a retry policy driven to
+exhaustion and the task shelved, an idempotency key spending exactly once,
+the graph refusing to spend past its allowance, a recompiled graph adopting
+a parked thread, an interrupt landing at a consistent boundary. What frames
+each scene is simulated: the "process" that dies is this process (a fresh
+graph instance stands in for the restart, and ``InMemorySaver`` for the
+durable store), the "hang" is the timeout wrapper's verdict delivered
+instantly, the dead-letter queue is a list in the driver, and the "deploy"
+recompiles identical code. The chapter's exercises graduate each stand-in
+to the real thing; this script certifies the mechanisms, not the ops.
+
 Every mechanism under test lives elsewhere in this repository in plain,
 standard-library Python --- the checkpointer and retry in the graph, the
 idempotency key and the treasury in ``foundations/`` --- and chaos day is
@@ -23,7 +35,6 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
 from foundations.algorithms import dependability as dep
-from foundations.budget import Budget
 
 from .brains import ScriptedBrain
 from .graph import build_team
@@ -73,16 +84,17 @@ class _CrashOnce:
 
 
 def crash_mid_run() -> bool:
-    saver = InMemorySaver()                   # the durable truth, off-process
+    saver = InMemorySaver()    # stands in for the durable, off-process store
     brain = _CrashOnce()
     cfg = _cfg("nightly")
     app = build_team(brain, checkpointer=saver)
     try:
         app.invoke(initial_state("harden the parser"), cfg)
     except RuntimeError:
-        pass                                  # the process died mid-review
+        pass                                  # the "process" died mid-review
 
-    # A fresh process reads the same checkpoint and carries on from the cut.
+    # A fresh graph instance --- standing in for the restarted process ---
+    # reads the same checkpoint and carries on from the cut.
     reborn = build_team(brain, checkpointer=saver)
     survived = reborn.get_state(cfg).values.get("findings", [])
     final = _resume_to_end(reborn, cfg, reborn.invoke(None, cfg))
@@ -96,9 +108,12 @@ def crash_mid_run() -> bool:
 # --- 2. The test runner hangs ---------------------------------------------
 
 def test_hangs() -> bool:
-    # The tester times out on every attempt; the node's RetryPolicy backs off,
-    # exhausts, and the task is shelved to the dead-letter queue with its
-    # trace rather than retried into the ground.
+    # The tester "hangs": the scripted brain raises TimeoutError at once,
+    # standing in for a real timeout wrapper's verdict after its deadline.
+    # What is under test is what happens next --- the node's RetryPolicy
+    # backs off, exhausts, and the driver shelves the task (a list standing
+    # in for the dead-letter queue) with its trace, rather than retrying it
+    # into the ground.
     app = build_team(ScriptedBrain(test_faults=99))
     cfg = _cfg("flaky")
     dead_letter: list[tuple[str, str]] = []
@@ -136,18 +151,27 @@ def duplicate_tool_result() -> bool:
 # --- 4. The budget runs out while a release waits at the gate -------------
 
 def budget_exhausts_at_gate() -> bool:
+    # The graph itself enforces the allowance: coder (1000) plus reviewer
+    # (500) drain the 1500-token treasury exactly as the run parks at the
+    # merge gate, and when the approved run reaches the tester, the node
+    # refuses to spend and winds the run down --- the mechanism, not an
+    # accountant arriving after the bill.
     app = build_team(ScriptedBrain(cost=1000))   # expensive turns
     cfg = _cfg("payday")
-    treasury = Budget(allowance=1500)
-    paused = app.invoke(initial_state("expensive refactor"), cfg)
-    treasury.spent = app.get_state(cfg).values["spent"]
-    wound_down = "__interrupt__" in paused and treasury.exhausted()
+    paused = app.invoke(
+        initial_state("expensive refactor", allowance=1500), cfg)
+    halted = _resume_to_end(app, cfg, paused)    # approve; tester refuses
+    spent = halted["spent"]
+    wound_down = (halted["status"] == "halted-budget"
+                  and spent <= 1500 and "__interrupt__" in paused)
 
-    # Wind-down banks the checkpoint and holds the approval; Monday tops up.
-    treasury.allowance += 2000
-    final = _resume_to_end(app, cfg, app.invoke(Command(resume=True), cfg))
-    _note("budget runaway", f"wound down at the gate (spent {treasury.spent} "
-          f">= 1500: {wound_down}), approval held; topped up and "
+    # Monday tops the treasury up at the gate's checkpoint --- time-travel,
+    # the Chapter 23 mechanism --- and the resumed run ships.
+    app.update_state(cfg, {"allowance": 3500}, as_node="gate")
+    final = _resume_to_end(app, cfg, app.invoke(None, cfg))
+    _note("budget runaway",
+          f"graph wound itself down (spent {spent} of 1500, "
+          f"status halted-budget: {wound_down}); topped up and "
           f"shipped={final['status'] == 'shipped'}")
     return wound_down and final["status"] == "shipped"
 
@@ -160,8 +184,10 @@ def deploy_mid_run() -> bool:
     app_v1 = build_team(ScriptedBrain(), checkpointer=saver)
     app_v1.invoke(initial_state("ship under a rollout"), cfg)  # parks at gate
 
-    # The deploy: a freshly compiled graph (newer code) resumes the parked run
-    # from the same journal and the same thread.
+    # The "deploy": a freshly compiled graph resumes the parked run from the
+    # same store and thread. (The recompiled code is identical here --- what
+    # is exercised is graph-adopts-parked-thread, not a schema migration,
+    # which needs the reducer discipline the chapter describes.)
     app_v2 = build_team(ScriptedBrain(), checkpointer=saver)
     final = _resume_to_end(
         app_v2, cfg, app_v2.invoke(Command(resume=True), cfg))
@@ -176,8 +202,10 @@ def civil_interrupt() -> bool:
     app = build_team(ScriptedBrain())
     cfg = _cfg("threeam")
     # On a checkpointed runtime a human stop lands at the next turn boundary;
-    # the merge gate is exactly such a boundary --- a consistent,
-    # resumable cut.
+    # the merge gate is exactly such a boundary --- a consistent, resumable
+    # cut. (In this small graph the gate is the only planned boundary, so
+    # the "3 a.m. break-in" and the ordinary approval park coincide; the
+    # property certified is that the cut is consistent and resumable.)
     paused = app.invoke(initial_state("routine nightly change"), cfg)
     resumable = ("__interrupt__" in paused
                  and app.get_state(cfg).next == ("gate",))

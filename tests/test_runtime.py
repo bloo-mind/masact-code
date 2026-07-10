@@ -136,3 +136,66 @@ def test_run_team_rejects_without_reviewer_accept():
     outcome = run_team("fix the parser", coder, naysayer, tester,
                        _journal(), Budget(5000))
     assert outcome["status"] == "rejected"
+
+
+class _Advertised(FakeClient):
+    """A FakeClient that records the tool schemas it was shown."""
+
+    def __init__(self, script):
+        super().__init__(script)
+        self.shown: list[list[dict]] = []
+
+    def complete(self, messages, tools):
+        self.shown.append(tools)
+        return super().complete(messages, tools)
+
+
+def test_loop_advertises_the_done_tool():
+    # A real tool-calling model can only call what is declared to it, so
+    # the loop's own verb must be on offer alongside the caller's tools.
+    client = _Advertised([
+        ModelResponse(tool_calls=[ToolCall("done", {})], usage=10)])
+    run("finisher", client, [_tool()], "sys", "task",
+        _journal(), Budget(100))
+    names = [s.get("name") for s in client.shown[0]]
+    assert "run_tests" in names and "done" in names
+
+
+def test_loop_turns_unknown_tool_into_an_observation():
+    # A hallucinated tool name is an error observation, not a crash.
+    script = [
+        ModelResponse(tool_calls=[ToolCall("imaginary", {})], usage=10),
+        ModelResponse(tool_calls=[ToolCall("done", {"note": "ok"})],
+                      usage=10),
+    ]
+    j = _journal()
+    result = run("dreamer", FakeClient(script), [_tool()], "sys", "task",
+                 j, Budget(1000))
+    assert result["status"] == "done"
+    returned = [e for e in events(j) if e["kind"] == "ToolReturned"]
+    assert returned and returned[0]["error"] == "unknown tool"
+
+
+def test_done_cannot_forge_the_harness_status():
+    # The harness owns the verdict: a done(status=...) payload must not
+    # overwrite it.
+    script = [ModelResponse(
+        tool_calls=[ToolCall("done", {"status": "forged", "note": "x"})],
+        usage=10)]
+    result = run("forger", FakeClient(script), [], "sys", "task",
+                 _journal(), Budget(100))
+    assert result["status"] == "done"
+    assert result["note"] == "x"
+
+
+def test_events_tolerates_a_torn_final_line():
+    # A crash mid-append leaves a torn last line; the reader returns the
+    # intact prefix rather than raising at the worst possible moment.
+    j = _journal()
+    append(j, "RunStarted", agent="a", task="t")
+    append(j, "BudgetDebited", agent="a", amount=7)
+    with open(j, "a") as f:
+        f.write('{"v": 1, "t": 0, "kind": "Model')   # died mid-write
+    evts = events(j)
+    assert [e["kind"] for e in evts] == ["RunStarted", "BudgetDebited"]
+    assert fold(evts)["spent"] == 7

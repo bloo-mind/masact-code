@@ -94,6 +94,14 @@ def jury_ablation(n: int = 7, p: float = 0.7,
     size. Accuracy rises monotonically as the estimated correlation falls: the
     theorem switching on. The simulation is seeded, so results are
     reproducible.
+
+    The accuracy column is the design-effect *reading* --- the ``m``
+    independent jurors' tail sum, which Chapter 27's Exercise 3 has the
+    reader reproduce analytically --- not the mixture panel's exact
+    accuracy: under the photocopying mixture that is ``rho * p + (1 - rho)
+    * P_n(p)``, and the reading understates it between the endpoints.
+    Effective size matches the *variance* of the correlated panel, not its
+    majority distribution; the instrument is priced, not free.
     """
     if targets is None:
         targets = list(range(1, n + 1, 2))  # odd effective sizes 1..n

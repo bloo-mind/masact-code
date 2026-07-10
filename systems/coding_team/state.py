@@ -18,6 +18,8 @@ class TeamState(TypedDict):
     findings: Annotated[list[str], operator.add]
     # the shared treasury: every node debits it, so the writes must sum
     spent: Annotated[int, operator.add]
+    # ...and the treasury has a ceiling the nodes enforce before spending
+    allowance: int
     diff: str          # bare: one writer per superstep, or the merge raises
     verdict: str       # "accept" | "reject" | ""
     suite: str         # "green" | "red" | ""
@@ -26,8 +28,11 @@ class TeamState(TypedDict):
     turn: int          # single-writer counter
 
 
-def initial_state(task: str) -> TeamState:
+NO_CAP = 10**9         # the default allowance: effectively uncapped
+
+
+def initial_state(task: str, allowance: int = NO_CAP) -> TeamState:
     return TeamState(
-        task=task, findings=[], spent=0, diff="", verdict="", suite="",
-        approved=False, status="start", turn=0,
+        task=task, findings=[], spent=0, allowance=allowance, diff="",
+        verdict="", suite="", approved=False, status="start", turn=0,
     )

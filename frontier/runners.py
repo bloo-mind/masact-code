@@ -15,6 +15,7 @@ measures the model, not the framework.
 from __future__ import annotations
 
 from collections.abc import Callable
+from uuid import uuid4
 
 from .rig import (
     AGENT_FINISHED, MESSAGE_SENT, REVIEWED, RUN_STARTED, TESTED, RunResult,
@@ -57,7 +58,9 @@ def langgraph_runner(brain: object | None = None,
 
     def run(task: str) -> RunResult:
         def _go() -> RunResult:
-            final = run_team(app, task, thread_id=f"fl-{hash(task) & 0xffff}")
+            # A fresh thread per run: reducer state must not leak across
+            # runs, and `hash()` is neither unique nor process-stable.
+            final = run_team(app, task, thread_id=f"fl-{uuid4().hex[:12]}")
             out = final["diff"] if final["status"] == "shipped" else ""
             q = (judge(task, out) if judge is not None
                  else (1.0 if final["status"] == "shipped" else 0.0))

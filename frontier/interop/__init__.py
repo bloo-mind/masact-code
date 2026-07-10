@@ -29,8 +29,12 @@ from .agent_card import (
     discovery,
 )
 from .deadlock import leader_follower_handoff, supervisor_deadlock
-from .mcp_client import call_tool, call_tool_stdio
-from .mcp_server import build_server
+
+try:  # the tool altitude needs the optional ``mcp`` extra; the agent
+    from .mcp_client import call_tool, call_tool_stdio
+    from .mcp_server import build_server
+except ImportError:  # altitude and the deadlock lab work without it
+    call_tool = call_tool_stdio = build_server = None  # type: ignore[assignment]
 
 __all__ = [
     "build_server",

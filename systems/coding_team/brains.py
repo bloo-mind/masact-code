@@ -39,7 +39,8 @@ class ScriptedBrain:
         self._faults = test_faults
 
     def code(self, state: TeamState) -> dict:
-        return {"diff": "+ if not x:\n+     return []",
+        return {"diff": ("+ words = text.split()\n"
+                         "+ return words[0] if words else ''"),
                 "note": "guard the empty-input case", "cost": self.cost}
 
     def review(self, state: TeamState) -> dict:
@@ -88,7 +89,15 @@ class LLMBrain:
                 description="a minimal patch, unified-diff style")
             note: str = Field(description="one line on what changed and why")
 
-        parsed, cost = self._ask(Change, _CODE_PROMPT.format(**state))
+        prompt = _CODE_PROMPT.format(task=state["task"])
+        if state.get("verdict") == "reject" and state.get("diff"):
+            # A revision, not a re-roll: the coder sees what was rejected
+            # and why, or the loop is three independent first attempts.
+            reason = next((f for f in reversed(state["findings"])
+                           if f.startswith("reviewer:")), "")
+            prompt += _REVISE_SUFFIX.format(diff=state["diff"],
+                                            reason=reason)
+        parsed, cost = self._ask(Change, prompt)
         return {"diff": parsed.diff, "note": parsed.note, "cost": cost}
 
     def review(self, state: TeamState) -> dict:
@@ -99,9 +108,9 @@ class LLMBrain:
             reason: str = Field(description="one line justifying the verdict")
 
         parsed, cost = self._ask(Verdict, _REVIEW_PROMPT.format(**state))
-        verdict = (
-            "accept" if parsed.verdict.lower().startswith("a") else "reject"
-        )
+        # Fail closed: anything but the exact word "accept" is a rejection.
+        v = parsed.verdict.strip().lower()
+        verdict = v if v in ("accept", "reject") else "reject"
         return {"verdict": verdict, "reason": parsed.reason, "cost": cost}
 
     def test(self, state: TeamState) -> dict:
@@ -111,7 +120,9 @@ class LLMBrain:
             suite: str = Field(description="'green' if it passes, else 'red'")
 
         parsed, cost = self._ask(Result, _TEST_PROMPT.format(**state))
-        suite = "green" if parsed.suite.lower().startswith("g") else "red"
+        # Fail closed: anything but the exact word "green" is red.
+        s = parsed.suite.strip().lower()
+        suite = s if s in ("green", "red") else "red"
         return {"suite": suite, "cost": cost}
 
 
@@ -119,6 +130,12 @@ _CODE_PROMPT = (
     "You are the coder on a software-engineering team.\n"
     "Task: {task}\n"
     "Propose the smallest change that resolves it."
+)
+_REVISE_SUFFIX = (
+    "\nYour previous patch was rejected in review.\n"
+    "Rejected patch:\n{diff}\n"
+    "Review finding: {reason}\n"
+    "Address the finding; do not resubmit the same patch."
 )
 _REVIEW_PROMPT = (
     "You are the reviewer. The coder proposed this change for the task "

@@ -6,8 +6,13 @@ the column that repays the exercise, failure behaviour. Tokens and latency
 spread modestly (the model is held fixed underneath); lines of code spread
 dramatically and *mislead* --- the declaration wins it, and the victory
 measures the decisions you did not get to make. Failure behaviour is the
-real separator: inject a tool error mid-turn, a model timeout, and a
-malformed response, and record what each candidate actually does.
+real separator: for each of a tool error, a model timeout, and a malformed
+response, the census *enacts* a runner's declared, dated disposition into
+an observable run and reads the verdict back off the run. The enactment
+exercises the classify mechanism; the dispositions themselves remain
+explicit assumptions until a live adapter is probed and its observed
+policy attached (:func:`attach_policy`) --- the Chapter 19 exercises do
+exactly that.
 
 Dated (2026): the lines-of-code counts and the fault dispositions are
 illustrative snapshots. The durable content is the *method* --- four
@@ -146,8 +151,12 @@ def _action_for(runner: Runner, fault: Fault) -> str:
 
 
 def inject(runner: Runner, fault: Fault) -> Runner:
-    """Wrap ``runner`` so ``fault`` actually fires mid-run, then let the
-    runner's own policy shape the OBSERVABLE outcome.
+    """Wrap ``runner`` so ``fault``'s declared disposition is enacted on
+    the observable run: the run executes normally and the wrapper then
+    shapes its record (status, output, journal) as the policy dictates.
+    Nothing fires inside the framework itself; what stays honest is
+    downstream --- :func:`classify_response` reads its verdict off the
+    run, never off a name -> verdict table.
 
     * *surface* --- a timeout raises :class:`TimeoutError`; any other fault
       sets ``status='failed'``, empties the output, and tags ``failures``.

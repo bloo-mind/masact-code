@@ -20,6 +20,11 @@ def run(agent_id: str, client: ModelClient, tools: list[Tool],
         system: str, task: str, journal_path: str, budget: Budget,
         max_turns: int = 12) -> dict:
     toolbox = {t.name: t for t in tools}
+    schemas = [t.schema for t in toolbox.values()]
+    if "done" not in toolbox:         # the loop's own verb, always on offer
+        schemas.append({"name": "done", "description":
+                        "Finish the run; your arguments are the result.",
+                        "required": []})
     history: list[str] = []
     observations: list[str] = []
     nudged = False
@@ -28,8 +33,7 @@ def run(agent_id: str, client: ModelClient, tools: list[Tool],
         messages = assemble(system, task, history, observations)
         observations = []
         append(journal_path, "ModelCalled", agent=agent_id, turn=turn)
-        response = client.complete(messages,
-                                   [t.schema for t in toolbox.values()])
+        response = client.complete(messages, schemas)
         append(journal_path, "ModelResponded", agent=agent_id,
                usage=response.usage)
         append(journal_path, "BudgetDebited", agent=agent_id,
@@ -38,10 +42,14 @@ def run(agent_id: str, client: ModelClient, tools: list[Tool],
         for call in response.tool_calls:
             if call.name == "done":   # finishing is an explicit, typed act
                 append(journal_path, "AgentFinished", agent=agent_id)
-                return {"status": "done", **call.args}
+                result = {"status": "done", **call.args}
+                result["status"] = "done"     # the harness owns the verdict
+                return result
             append(journal_path, "ToolDispatched", agent=agent_id,
                    tool=call.name)
-            observation = dispatch(toolbox[call.name], call.args)
+            tool = toolbox.get(call.name)
+            observation = (dispatch(tool, call.args) if tool else
+                           {"tool": call.name, "error": "unknown tool"})
             append(journal_path, "ToolReturned", agent=agent_id,
                    **observation)
             observations.append(json.dumps(observation))

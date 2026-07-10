@@ -11,6 +11,7 @@ layer, so the statistics are the same in the lab as on the page.
 from __future__ import annotations
 
 from collections.abc import Callable
+from uuid import uuid4
 
 from foundations.algorithms.evaluation import paired_t
 
@@ -42,7 +43,10 @@ def team_runner(brain: object) -> Runner:
     app = build_team(brain)
 
     def run(task: str) -> str:
-        final = run_team(app, task, thread_id=f"eval-{hash(task) & 0xffff}")
+        # A fresh thread per run: reducer state (spent, findings) must not
+        # leak from one run into the next, and `hash()` is neither unique
+        # nor stable across processes.
+        final = run_team(app, task, thread_id=f"eval-{uuid4().hex[:12]}")
         return final["diff"] if final["status"] == "shipped" else ""
 
     return run

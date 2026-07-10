@@ -3,7 +3,7 @@
 Two systems, each built around a supervisor that expects to *lead*. Bring
 them together and each addresses the other as its subagent, delegates the
 task downward, and waits for the other's report. Every message is
-schema-valid and authenticated; the envelopes are perfect. And the joint
+schema-valid and well-formed; the envelopes are perfect. And the joint
 system makes no progress, because a protocol validates *form*, not the
 *architectural* question of who is in charge --- which neither side will
 concede.
@@ -116,7 +116,7 @@ def supervisor_deadlock(rounds: int = 3) -> dict:
     """Simulate the bounded exchange between two lead supervisors.
 
     Each round, both supervisors delegate to the other and then wait for a
-    report. Every message is schema-valid and authenticated; none is a
+    report. Every message is schema-valid and well-formed; none is a
     submission. The exchange is bounded, so it terminates --- but with the
     schemas green and the task dead.
     """

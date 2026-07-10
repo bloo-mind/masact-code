@@ -28,7 +28,7 @@ The toolchain is the book's own: a recent Python and
 git clone https://github.com/bloo-mind/masact-code.git
 cd masact-code
 uv sync
-uv run pytest            # 138 tests, standard library only
+uv run pytest            # 219 tests; the foundations layer is stdlib-only
 ```
 
 Watch the book's running example — the software-engineering team —

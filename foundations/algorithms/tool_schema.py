@@ -31,6 +31,9 @@ def run_tests(path: str) -> dict:
 
 
 def dispatch(tool: dict, fn: Callable[..., dict], args: dict) -> dict:
+    for field in args:
+        if field not in tool["parameters"]["properties"]:
+            return {"error": f"unknown field: {field}"}
     for field, spec in tool["parameters"]["properties"].items():
         if field in tool["parameters"]["required"] and field not in args:
             return {"error": f"missing field: {field}"}

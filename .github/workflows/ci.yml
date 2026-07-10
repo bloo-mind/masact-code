@@ -1,0 +1,32 @@
+# Two cells, mirroring the layer split the README promises:
+#  * base — the foundations layer must import, collect, and pass on the
+#    standard library alone (extras-guarded tests skip themselves);
+#  * full — every extra installed, lint enforced, the whole suite green.
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  base:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run pytest
+
+  full:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --all-extras
+      - run: uv run ruff check .
+      - run: uv run pytest

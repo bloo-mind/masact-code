@@ -21,6 +21,13 @@ delay only and never changes an outcome, so tests stay deterministic by
 monkeypatching ``time.sleep`` to a no-op. The module-level ``seen``,
 ``faults`` and ``journal`` are the book's demonstration state; the tests
 reset them per case.
+
+Scope, stated plainly: this is the chapter's single-process, single-thread
+demonstration. The ``seen`` cache is in-memory (a restart forgets it), and
+two *concurrent* deliveries of one key can both evaluate ``fn`` before
+either records it --- the durable, atomic version (provider-side keys, a
+uniqueness claim that survives restarts, query-before-re-execution on an
+ambiguous commit) is exactly what Chapter 23's exercises have you build.
 """
 
 import random

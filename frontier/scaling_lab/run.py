@@ -24,15 +24,21 @@ from .sweep import (
 )
 
 
-def _print_sweep_table(sweep: dict, title: str) -> None:
+def _print_sweep_table(sweep: dict, title: str,
+                       sizes: list[int] | None = None,
+                       topologies: list[str] | None = None) -> None:
+    # Print only the cells the sweep measured: a partial (live) grid must
+    # not index cells it never ran --- and paid for --- into a KeyError.
+    sizes = SIZES if sizes is None else sizes
+    topologies = TOPOLOGIES if topologies is None else topologies
     print(f"\n{title}")
-    header = "  topology     " + "".join(f"  n={n:<10}" for n in SIZES)
+    header = "  topology     " + "".join(f"  n={n:<10}" for n in sizes)
     print("  (cap = capability: harvested speedup, shared scale across "
           "regimes)")
     print(header)
-    for topo in TOPOLOGIES:
+    for topo in topologies:
         cells = []
-        for n in SIZES:
+        for n in sizes:
             c = sweep[(n, topo)]
             cells.append(f"cap={c['quality']:.3f} t={int(c['tokens']):>4}")
         print(f"  {topo:<11}" + "  ".join(f"{c:<12}" for c in cells))
@@ -98,7 +104,9 @@ def _run_live() -> None:
     except Exception as exc:  # noqa: BLE001 -- report and carry on
         print(f"  live sweep unavailable: {exc}")
         return
-    _print_sweep_table(sweep, "live sweep (partial grid)")
+    _print_sweep_table(sweep, "live sweep (partial grid: a smoke of the "
+                       "live seam, not a sized experiment)",
+                       sizes=[1, 2], topologies=["single"])
 
 
 def main() -> None:

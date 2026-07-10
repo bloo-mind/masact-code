@@ -68,6 +68,8 @@ def in_core(
     the grand coalition's value and pay every coalition at least its outside
     worth. That is one budget equality, ``sum_i x_i == v(N)``, and the ``2^n``
     secession inequalities ``sum_{i in S} x_i >= v(S)`` for all ``S``."""
+    if set(x) != set(agents):   # an outsider cannot balance the books
+        return False
     grand = frozenset(agents)
     if not isclose(sum(x.values()), v[grand], abs_tol=_TOL):
         return False

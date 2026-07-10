@@ -89,3 +89,30 @@ def test_state_is_recomputed_from_the_checkpoint_not_shared():
     b = run_team(app, "task B", thread_id="B")
     assert a["task"] == "task A" and b["task"] == "task B"
     assert a["spent"] == b["spent"] == 220
+
+
+def test_reviewer_cap_exhaustion_is_a_terminal_rejection():
+    # A run that exhausts the revision cap ends "rejected", not parked on
+    # an eternal "review".
+    app = build_team(ScriptedBrain(verdict="reject"))
+    final = run_team(app, "never good enough", thread_id="cap")
+    assert final["status"] == "rejected"
+    assert final["turn"] == 3
+
+
+def test_graph_enforces_the_allowance_before_spending():
+    # The treasury has a ceiling the nodes check before calling the brain:
+    # coder (120) + reviewer (60) exhaust an allowance of 150, so the
+    # tester refuses to spend and the run winds itself down.
+    from systems.coding_team import initial_state as init
+    from langgraph.types import Command
+
+    app = build_team(ScriptedBrain())
+    cfg = {"configurable": {"thread_id": "broke"}}
+    paused = app.invoke(init("expensive", allowance=150), cfg)
+    assert "__interrupt__" in paused              # parked at the gate
+    final = app.invoke(Command(resume=True), cfg)
+    assert final["status"] == "halted-budget"
+    assert final["spent"] <= 180                  # 120 + 60: no tester spend
+    assert final["suite"] == ""                   # the tester never ran
+    assert any("wound down" in f for f in final["findings"])
