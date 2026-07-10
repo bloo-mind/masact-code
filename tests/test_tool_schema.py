@@ -6,6 +6,8 @@ malformed one comes back as an ``error`` dictionary rather than a raised
 exception.  The ``# ->`` values in the listing are asserted exactly.
 """
 
+import pytest
+
 from foundations.algorithms.tool_schema import (
     dispatch,
     run_tests,
@@ -38,12 +40,15 @@ def test_error_is_returned_not_raised() -> None:
     assert result == {"error": "path must be string"}
 
 
-def test_unknown_field_returns_error_observation() -> None:
-    # An argument the schema never declared is malformed too --- an error
-    # dictionary, not a TypeError raised out of ``fn(**args)``.
+def test_undeclared_field_gap_is_deliberate() -> None:
+    # TAUGHT-AS-FLAW (do not fix): the validation loop walks declared
+    # properties only, so an undeclared argument reaches ``fn(**args)``
+    # and raises --- the gap Chapter 6's Exercise 2 has the reader find
+    # and close. This test pins the flaw so nobody repairs it by
+    # accident and silently invalidates the exercise.
     args = {"path": "tests/test_auth.py", "verbose": True}
-    result = dispatch(run_tests_tool, run_tests, args)
-    assert result == {"error": "unknown field: verbose"}
+    with pytest.raises(TypeError):
+        dispatch(run_tests_tool, run_tests, args)
 
 
 def test_types_map_covers_the_schema_primitives() -> None:

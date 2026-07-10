@@ -13,6 +13,13 @@ This is the pre-runtime Chapter 6 demonstration and is deliberately kept
 separate from ``foundations.tools``: it neither imports nor references the
 runtime ``Tool``/``dispatch``, so a reader copying the listing from the
 book finds exactly this, self-contained.  Standard library only.
+
+Deliberately imperfect, and it must stay so: the validation loop walks
+the *declared* properties, so an undeclared argument slips through to
+``fn(**args)`` and raises --- the promise-breaking gap that Chapter 6's
+Exercise 2 has the reader find and close (and Exercise 8 generalise).
+Do not "fix" it here; the repaired dispatcher is the student's artefact,
+and the runtime one lives in ``foundations.tools``.
 """
 
 from collections.abc import Callable
@@ -31,9 +38,6 @@ def run_tests(path: str) -> dict:
 
 
 def dispatch(tool: dict, fn: Callable[..., dict], args: dict) -> dict:
-    for field in args:
-        if field not in tool["parameters"]["properties"]:
-            return {"error": f"unknown field: {field}"}
     for field, spec in tool["parameters"]["properties"].items():
         if field in tool["parameters"]["required"] and field not in args:
             return {"error": f"missing field: {field}"}
