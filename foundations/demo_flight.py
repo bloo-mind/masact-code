@@ -68,7 +68,7 @@ def render(evts, note="", drop=()):
     for the schema-version ``v`` and timestamp ``t`` fields, which every line
     also carries and which are elided here for the page."""
     def trim(v):
-        return v[:44] + "…" if isinstance(v, str) and len(v) > 46 else v
+        return v[:78] + "…" if isinstance(v, str) and len(v) > 80 else v
 
     lines = [f"# {note}"] if note else []
     for e in evts:

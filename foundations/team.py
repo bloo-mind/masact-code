@@ -27,6 +27,13 @@ def integrate(inbox: list[Message], task_id: str,
     return apply()
 
 
+def brief(verb: str, payload: dict) -> str:
+    """Compose a downstream task from a ``done`` payload: the diff and
+    the test output, nothing else --- jurisdiction, not chatter."""
+    return (f"{verb}\ndiff:\n{payload.get('diff', '')}\n"
+            f"tests:\n{payload.get('tests', '')}")
+
+
 @dataclass
 class Worker:
     """A role: a client, its toolset, and its standing instructions."""
@@ -42,7 +49,9 @@ def run_team(task: str, coder: Worker, reviewer: Worker, tester: Worker,
     """Dispatch the task to the coder, gate the merge on the reviewer's
     ``ACCEPT``, and let the tester confirm the integrated result. The
     reviewer and tester report a verdict in their ``done`` payload under
-    the key ``verdict`` (``"accept"`` / ``"reject"`` / ``"green"``)."""
+    the key ``verdict`` (``"accept"`` / ``"reject"`` / ``"green"``).
+    Downstream briefs carry the diff and the test output only --- each
+    role's jurisdiction, not the upstream conversation."""
     box = Mailbox(journal_path)
     task_id = "T1"
 
@@ -56,7 +65,8 @@ def run_team(task: str, coder: Worker, reviewer: Worker, tester: Worker,
                      task_id, made))
 
     seen = run(reviewer.role, reviewer.client, reviewer.tools,
-               reviewer.system, str(made), journal_path, budget)
+               reviewer.system, brief("Review the change.", made),
+               journal_path, budget)
     verdict = seen.get("verdict") == "accept"
     box.send(Message(Performative.ACCEPT if verdict else Performative.REJECT,
                      reviewer.role, "orchestrator", task_id, {}))
@@ -68,6 +78,7 @@ def run_team(task: str, coder: Worker, reviewer: Worker, tester: Worker,
         return {"status": "rejected", "reason": str(exc)}
 
     checked = run(tester.role, tester.client, tester.tools, tester.system,
-                  str(merged), journal_path, budget)
+                  brief("Verify the integrated change.", merged),
+                  journal_path, budget)
     return {"status": "shipped", "result": merged,
             "suite": checked.get("verdict")}

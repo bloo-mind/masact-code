@@ -42,9 +42,8 @@ def run(agent_id: str, client: ModelClient, tools: list[Tool],
         for call in response.tool_calls:
             if call.name == "done":   # finishing is an explicit, typed act
                 append(journal_path, "AgentFinished", agent=agent_id)
-                result = {"status": "done", **call.args}
-                result["status"] = "done"     # the harness owns the verdict
-                return result
+                result = {**call.args, "status": "done"}
+                return result  # harness owns the verdict; later calls drop
             append(journal_path, "ToolDispatched", agent=agent_id,
                    tool=call.name)
             tool = toolbox.get(call.name)
