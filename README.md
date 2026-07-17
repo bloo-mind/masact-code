@@ -1,5 +1,7 @@
 # masact-code
 
+[![CI](https://github.com/bloo-mind/masact-code/actions/workflows/ci.yml/badge.svg)](https://github.com/bloo-mind/masact-code/actions/workflows/ci.yml)
+
 Companion code for the textbook **_Multi-Agent Systems: A Contemporary
 Treatment_** by Dell Zhang and Benjamin Chang.
 
@@ -46,8 +48,8 @@ provider, and the same harness drives a live team.
 ## Layout
 
 Three layers, mirroring the book. The foundations layer runs on the Python
-standard library alone; the upper layers need a framework and provider keys and
-are built later (see [Appendix C](https://books.bloo-mind.ai/masact/) and each
+standard library alone; the upper layers need a framework and, for live runs,
+provider keys (see [Appendix C](https://books.bloo-mind.ai/masact/) and each
 layer's own README).
 
 ### `foundations/` — the runtime and the classics
@@ -88,8 +90,8 @@ harness of Chapters 23–24. Needs a framework and a provider key. See
 ### `frontier/` — the moving-target layer
 
 Versioned, dated laboratories on live vendor platforms: the framework
-comparison (Ch 19), interoperability (Ch 21–22), and the capstone scaling lab
-(Ch 27). See [`frontier/README.md`](frontier/README.md).
+comparison (Ch 19), the pattern census (Ch 21), interoperability (Ch 22), and
+the capstone scaling lab (Ch 27). See [`frontier/README.md`](frontier/README.md).
 
 ## How the book and the code fit together
 
@@ -103,6 +105,38 @@ surrounded here by tests and the extensions the chapters leave as exercises.
 
 Requirements: **Python 3.12+**, **uv**. The `foundations/` layer needs no keys;
 the upper layers read provider keys from `.env` (copy `.env.example`).
+
+## Chapter index
+
+Which chapters have runnable code, and where it lives today — the scripted,
+key-free mode covers every row; the live mode needs a key.
+
+| Chapter | Runnable code |
+|:--|:--|
+| 1 | `foundations/algorithms/scaling.py` |
+| 6 | `foundations/algorithms/tool_schema.py` |
+| 7 | `foundations/algorithms/retrieval.py` |
+| 8 | `foundations/messages.py` — the performative enum |
+| 10 | `foundations/algorithms/contract_net.py` |
+| 11 | `foundations/algorithms/lamport.py` · `dcop.py` |
+| 12 | `foundations/algorithms/games.py` |
+| 13 | `foundations/algorithms/jury.py` · `frontier/scaling_lab/jury.py` |
+| 14 | `foundations/algorithms/argumentation.py` |
+| 15 | `foundations/algorithms/auctions.py` |
+| 16 | `foundations/algorithms/shapley.py` |
+| 18 | `foundations/emergence/` — Schelling, naming game, cascade |
+| 19 | `frontier/framework_lab/` |
+| 20 | the `foundations/` runtime + `demo_team.py` · `demo_flight.py` |
+| 21 | `frontier/patterns/` |
+| 22 | `frontier/interop/` |
+| 23 | `systems/coding_team/` · `foundations/algorithms/dependability.py` |
+| 24 | `systems/evaluation/` · `foundations/algorithms/evaluation.py` |
+| 26 | `foundations/algorithms/calibration.py` |
+| 27 | `frontier/scaling_lab/` · `foundations/algorithms/scaling.py` |
+
+Chapters absent from the table are prose-and-exercise chapters; their
+exercises build on the rows above (the runtime and the labs each serve
+several chapters).
 
 ## Contributing
 
