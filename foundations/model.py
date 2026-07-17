@@ -17,7 +17,7 @@ class ToolCall:
 class ModelResponse:
     text: str = ""
     tool_calls: list[ToolCall] = field(default_factory=list)
-    usage: int = 0                     # tokens this call cost, always
+    usage: int = 0        # prompt + completion, one figure; never omitted
 
 
 class ModelClient:
@@ -35,4 +35,4 @@ class FakeClient(ModelClient):
         self.script = list(script)
 
     def complete(self, messages, tools):
-        return self.script.pop(0)
+        return self.script.pop(0)  # exhaustion IS the test failure
